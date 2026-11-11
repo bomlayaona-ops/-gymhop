@@ -1,0 +1,28 @@
+#!/bin/bash
+# Runs once when the Codespace is created: installs the database, packages and .env
+set -e
+sudo apt-get update -y
+sudo apt-get install -y mariadb-server
+sudo service mariadb start
+sleep 3
+pip install -r requirements.txt
+# Database + a user for the app, then your tables
+sudo mariadb -e "CREATE USER IF NOT EXISTS 'gymhop'@'localhost' IDENTIFIED BY 'gymhop'; CREATE USER IF NOT EXISTS 'gymhop'@'127.0.0.1' IDENTIFIED BY 'gymhop';"
+sudo mariadb < database.sql
+sudo mariadb -e "GRANT ALL ON gymhop_marketplace.* TO 'gymhop'@'localhost'; GRANT ALL ON gymhop_marketplace.* TO 'gymhop'@'127.0.0.1'; FLUSH PRIVILEGES;"
+# .env (email settings come from Codespaces secrets if you added them)
+cat > .env <<ENV
+SECRET_KEY=$(python -c "import secrets;print(secrets.token_hex(32))")
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=gymhop
+DB_PASSWORD=gymhop
+DB_NAME=gymhop_marketplace
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USE_TLS=true
+MAIL_USERNAME=${MAIL_USERNAME:-}
+MAIL_PASSWORD=${MAIL_PASSWORD:-}
+MAIL_DEFAULT_SENDER=${MAIL_USERNAME:-}
+ENV
+echo "Setup done. Run:  python app.py"
