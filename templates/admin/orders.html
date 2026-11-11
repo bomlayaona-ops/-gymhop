@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import csrf, status with context %}
+{% block title %}Orders{% endblock %}
+{% block content %}
+<section class="dashboard-head"><div><span class="eyebrow">RECORDS</span><h1>Product orders</h1><p>Verify the payment first, then move the order forward.</p></div></section>
+<section class="dashboard-section">
+{% if rows %}<div class="table-wrap"><table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Update</th></tr></thead><tbody>
+{% for o in rows %}<tr><td>{{ o.order_number }}<small>{{ o.created_at.strftime('%b %d, %Y') }}</small></td>
+<td>{{ o.first_name or '' }} {{ o.last_name or '' }}<small>{{ o.email }}</small><small>{{ o.shipping_address }}</small></td>
+<td>{% for i in o["items"] %}{{ i.quantity }} × {{ i.product_name }}<br>{% endfor %}</td><td>{{ o.total_amount|peso }}</td>
+<td>{{ status(o.payment_status or 'pending') }}</td><td>{{ status(o.status) }}</td>
+<td>{% if o.status not in ('completed','cancelled') and o.payment_status == 'paid' %}
+<form method="post" action="{{ url_for('admin.order_status', order_id=o.id) }}" class="status-form">{{ csrf() }}
+<select name="status" aria-label="Order status">{% for s in ['processing','ready','completed','cancelled'] %}<option value="{{ s }}" {{ 'selected' if o.status == s }}>{{ s|capitalize }}</option>{% endfor %}</select><button class="mini-btn">Save</button></form>
+{% elif o.payment_status == 'pending' %}<a class="mini-btn" href="{{ url_for('admin.payments') }}">Verify payment</a>{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>{% else %}<div class="empty-inline"><p>No orders yet.</p></div>{% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import csrf with context %}
+{% block title %}Your cart{% endblock %}
+{% block content %}
+<section class="dashboard-head"><div><span class="eyebrow">SHOPPING</span><h1>Your cart</h1><p>Items from different gyms are checked out as separate orders.</p></div>
+  <a class="btn btn-dark" href="{{ url_for('main.shop') }}">Keep shopping</a></section>
+<section class="dashboard-section">
+{% if items %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>Product</th><th>Gym</th><th>Price</th><th>Qty</th><th>Total</th><th></th></tr></thead>
+    <tbody>
+    {% for i in items %}
+    <tr>
+      <td class="cart-product"><img src="{{ url_for('static', filename=product_image(i)) }}" alt=""><strong>{{ i.name }}</strong></td>
+      <td>{{ i.gym_name }}</td><td>{{ i.price|peso }}</td>
+      <td><form method="post" action="{{ url_for('customer.cart_update', product_id=i.product_id) }}" class="status-form">{{ csrf() }}
+          <input type="number" name="quantity" value="{{ i.quantity }}" min="1" max="{{ i.stock }}" class="qty"><button class="mini-btn">Update</button></form></td>
+      <td>{{ i.line_total|peso }}</td>
+      <td><form method="post" action="{{ url_for('customer.cart_remove', product_id=i.product_id) }}">{{ csrf() }}<button class="mini-btn danger">Remove</button></form></td>
+    </tr>
+    {% endfor %}
+    </tbody></table></div>
+  <div class="cart-total"><span>Total</span><strong>{{ total|peso }}</strong><a class="btn btn-primary" href="{{ url_for('customer.checkout') }}">Checkout ↗</a></div>
+{% else %}
+  <div class="empty-state"><span>🛒</span><h3>Your cart is empty</h3><p>Find merch and supplements from partner gyms.</p><a class="btn btn-primary" href="{{ url_for('main.shop') }}">Browse the shop</a></div>
+{% endif %}
+</section>
+{% endblock %}

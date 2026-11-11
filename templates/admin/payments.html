@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import csrf, status with context %}
+{% block title %}Payments{% endblock %}
+{% block content %}
+<section class="dashboard-head"><div><span class="eyebrow">RECORDS</span><h1>Payments</h1><p>Check your GCash / Maya app for the reference number, then confirm. Confirming activates the membership, order or booking.</p></div></section>
+<section class="dashboard-section" id="payment-setup">
+  <div class="section-heading"><div><h2>How customers pay you</h2></div></div>
+  <p class="muted">Add the QR code of each account you accept. Customers see it, with your description, when they pay for a membership, trainer or order. Turn a method off to hide it.</p>
+  <div class="pm-grid">
+  {% for key, label in providers.items() %}{% set a = accounts.get(key) %}
+  <form method="post" action="{{ url_for('admin.payment_method_save', method=key) }}" enctype="multipart/form-data" class="form-card form-stack pm-card">
+    {{ csrf() }}
+    <div class="pm-head"><h3><span class="pay-chip {{ key }}">{{ label }}</span></h3>
+      <label class="check"><input type="checkbox" name="enabled" value="1" {{ 'checked' if a and a.is_enabled }}> Accept {{ label }}</label></div>
+    {% if a and a.qr_image %}<img class="qr-img" src="{{ url_for('static', filename=a.qr_image) }}" alt="{{ label }} QR code">
+    <label class="check"><input type="checkbox" name="remove_qr" value="1"> Remove this QR code</label>{% endif %}
+    <label>{{ label }} QR code <small>(PNG, JPG or WEBP, max 5 MB)</small><input type="file" name="qr" accept="image/png,image/jpeg,image/webp"></label>
+    <div class="two-col">
+      <label>Account name<input name="account_name" maxlength="120" placeholder="Name on the account" value="{{ a.account_name if a and a.account_name else '' }}"></label>
+      <label>Account / mobile number<input name="account_number" maxlength="40" placeholder="09171234567" value="{{ a.account_number if a and a.account_number else '' }}"></label>
+    </div>
+    <label>Description for customers <small>(optional)</small><textarea name="description" rows="2" maxlength="300" placeholder="e.g. Scan to pay. Put your full name in the message.">{{ a.description if a and a.description else '' }}</textarea></label>
+    <button class="btn btn-primary" type="submit">Save {{ label }}</button>
+  </form>
+  {% endfor %}
+  </div>
+</section>
+<section class="dashboard-section"><div class="section-heading"><div><h2>Payments to verify</h2></div></div>
+
+{% if rows %}<div class="table-wrap"><table><thead><tr><th>Reference</th><th>Customer</th><th>For</th><th>Method</th><th>Amount</th><th>Proof</th><th>Status</th><th></th></tr></thead><tbody>
+{% for p in rows %}<tr><td>{{ p.reference_no }}<small>{{ p.created_at.strftime('%b %d, %Y %I:%M %p') }}</small></td>
+<td>{{ p.first_name or '' }} {{ p.last_name or '' }}<small>{{ p.email }}</small></td><td>{{ p.target }}</td>
+<td>{{ p.method|replace('_',' ')|upper }}{% if p.external_reference %}<small>Ref: <strong>{{ p.external_reference }}</strong></small>{% endif %}</td>
+<td>{{ p.amount|peso }}</td>
+<td>{% if p.proof_image %}<a class="text-link" target="_blank" rel="noopener" href="{{ url_for('static', filename=p.proof_image) }}">View</a>{% else %}—{% endif %}</td>
+<td>{{ status(p.status) }}</td>
+<td class="row-actions">{% if p.status == 'pending' %}
+<form method="post" action="{{ url_for('admin.payment_action', payment_id=p.id, action='verify') }}" data-confirm="Confirm that you received {{ p.amount|peso }}?">{{ csrf() }}<button class="mini-btn ok">Confirm</button></form>
+<form method="post" action="{{ url_for('admin.payment_action', payment_id=p.id, action='reject') }}" data-confirm="Reject this payment? The order/membership/booking will be cancelled.">{{ csrf() }}<button class="mini-btn danger">Reject</button></form>{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>{% else %}<div class="empty-inline"><p>No payments yet.</p></div>{% endif %}
+</section>
+{% endblock %}

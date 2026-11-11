@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import csrf, address_picker with context %}
+{% block title %}My gym{% endblock %}
+{% block content %}
+<section class="dashboard-head"><div><span class="eyebrow">YOUR STOREFRONT</span><h1>Gym profile</h1><p>This is what customers see on your public page.</p></div></section>
+<section class="dashboard-section">
+<form method="post" enctype="multipart/form-data" class="form-card form-stack">
+  {{ csrf() }}
+  <label class="switch-row"><input type="checkbox" name="is_open" value="1" {{ 'checked' if gym.is_open }}> <span><strong>Gym is open</strong><small>Turn off to stop new memberships, bookings and orders (e.g. holiday closure).</small></span></label>
+  <div class="two-col">
+    <label>Gym name<input name="name" required maxlength="120" value="{{ gym.name }}"></label>
+    <label>Operating hours<input name="operating_hours" maxlength="255" placeholder="Mon–Sat 5AM–10PM" value="{{ gym.operating_hours or '' }}"></label>
+  </div>
+  <label>Description<textarea name="description" rows="3">{{ gym.description or '' }}</textarea></label>
+  {{ address_picker(request.form.get('region',''), request.form.get('province') or gym.province or '', request.form.get('city_other') or request.form.get('city') or gym.city or '', request.form.get('detail') or gym.address or '', 'Gym address description') }}
+  <div class="two-col">
+    <label>Contact number<input name="contact_number" maxlength="11" inputmode="numeric" pattern="09[0-9]{9}" placeholder="09171234567" title="11 digits starting with 09" oninput="this.value=this.value.replace(/\D/g,'')" value="{{ gym.contact_number or '' }}"></label>
+    <label>Public email<input name="email" type="email" maxlength="150" value="{{ gym.email or '' }}"></label>
+  </div>
+  <label>Facilities<textarea name="facilities" rows="2" placeholder="Lockers, showers, parking…">{{ gym.facilities or '' }}</textarea></label>
+  <label>Equipment<textarea name="equipment" rows="2">{{ gym.equipment or '' }}</textarea></label>
+  <label>House rules<textarea name="rules" rows="2">{{ gym.rules or '' }}</textarea></label>
+  <div class="two-col">
+    <label>Facebook link<input name="facebook_url" maxlength="255" placeholder="https://facebook.com/…" value="{{ gym.facebook_url or '' }}"></label>
+    <label>Instagram link<input name="instagram_url" maxlength="255" placeholder="https://instagram.com/…" value="{{ gym.instagram_url or '' }}"></label>
+  </div>
+  <div class="two-col">
+    <label>Logo <small>(optional)</small><input type="file" name="logo" accept="image/png,image/jpeg,image/webp"></label>
+    <label>Cover photo <small>(optional)</small><input type="file" name="cover" accept="image/png,image/jpeg,image/webp"></label>
+  </div>
+  <fieldset class="pay-box"><legend>Map location</legend>
+    <p class="muted-sm">Type your gym's place and the pin drops by itself. You can also click the map or drag the pin to the exact spot.</p>
+    <div class="place-search">
+      <input id="place-q" placeholder="Type your gym or its place, e.g. Anytime Fitness SM City Lipa" maxlength="150" autocomplete="off">
+      <button type="button" class="btn btn-dark" id="place-go">Find &amp; pin</button>
+      <button type="button" class="btn btn-dark" id="place-me">Use my location</button>
+    </div>
+    <ul class="place-results" id="place-results"></ul>
+    <p class="muted-sm" id="place-msg"></p>
+    <div id="pick-map" data-lat="{{ location.latitude if location else 12.8797 }}" data-lng="{{ location.longitude if location else 121.774 }}" data-has="{{ '1' if location else '0' }}"></div>
+    <div class="two-col">
+      <label>Latitude<input name="latitude" id="lat" value="{{ location.latitude if location else '' }}"></label>
+      <label>Longitude<input name="longitude" id="lng" value="{{ location.longitude if location else '' }}"></label>
+    </div>
+  </fieldset>
+  <button class="btn btn-primary btn-full">Save gym profile</button>
+</form>
+</section>
+{% endblock %}
+{% block head %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{{ url_for('static', filename='js/geo.js') }}"></script>
+<script>
+(function () {
+  const el = document.getElementById('pick-map'), msg = document.getElementById('place-msg');
+  const latIn = document.getElementById('lat'), lngIn = document.getElementById('lng');
+  const has = el.dataset.has === '1';
+  const map = L.map(el).setView([+el.dataset.lat, +el.dataset.lng], has ? 16 : 6);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© OpenStreetMap contributors', maxZoom: 19}).addTo(map);
+  let marker = null, manual = has;       // manual = the owner already chose an exact spot, so do not move it by itself
+
+  function pin(lat, lng, zoom) {
+    if (!marker) {
+      marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+      marker.on('dragend', function () { const p = marker.getLatLng(); setInputs(p.lat, p.lng); manual = true; });
+    } else marker.setLatLng([lat, lng]);
+    setInputs(lat, lng);
+    map.setView([lat, lng], zoom || 16);
+  }
+  function setInputs(lat, lng) { latIn.value = (+lat).toFixed(6); lngIn.value = (+lng).toFixed(6); }
+  if (has) pin(+el.dataset.lat, +el.dataset.lng, 16);
+
+  map.on('click', function (e) { pin(e.latlng.lat, e.latlng.lng, map.getZoom()); manual = true; msg.textContent = 'Pin placed. Drag it to fine-tune.'; });
+
+  const list = document.getElementById('place-results'), q = document.getElementById('place-q');
+  async function find() {
+    const text = q.value.trim();
+    if (text.length < 3) { list.innerHTML = ''; return; }
+    msg.textContent = 'Searching...';
+    try {
+      const hits = await Geo.search(text + ', Philippines', 5);
+      if (!hits.length) { list.innerHTML = ''; msg.textContent = 'No place found. Try a landmark, barangay or city name.'; return; }
+      pin(hits[0].lat, hits[0].lng, 17); manual = true;
+      msg.textContent = 'Pinned: ' + hits[0].name + '. Not the right one? Pick another below, or drag the pin.';
+      list.innerHTML = '';
+      hits.slice(1).forEach(function (h) {
+        const li = document.createElement('li'); li.textContent = h.name;
+        li.addEventListener('click', function () { pin(h.lat, h.lng, 17); msg.textContent = 'Pinned: ' + h.name; });
+        list.appendChild(li);
+      });
+    } catch (e) { msg.textContent = 'Could not search right now. Check your internet, or click the map to place the pin.'; }
+  }
+  let timer = null;
+  q.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(find, 900); });   // auto-pin while typing
+  q.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); clearTimeout(timer); find(); } });
+  document.getElementById('place-go').addEventListener('click', find);
+  document.getElementById('place-me').addEventListener('click', function () {
+    if (!navigator.geolocation || !window.isSecureContext) { msg.textContent = 'Location only works on http://127.0.0.1:5000. Type the place instead.'; return; }
+    navigator.geolocation.getCurrentPosition(function (p) { pin(p.coords.latitude, p.coords.longitude, 18); manual = true; msg.textContent = 'Pinned at your current location.'; },
+      function () { msg.textContent = 'Location is blocked. Allow it in the browser, or type the place.'; }, {timeout: 12000});
+  });
+
+  // also pin automatically from the address dropdowns above (until the owner chooses an exact spot)
+  const box = document.querySelector('.addr-picker');
+  let t2 = null;
+  async function fromAddress() {
+    if (manual || !box) return;
+    const city = box.querySelector('[name=city]').value, prov = box.querySelector('[name=province]').value;
+    const other = box.querySelector('[name=city_other]').value;
+    const c = city === '__other__' ? other : city;
+    if (!c || !prov) return;
+    const detail = box.querySelector('[name=detail]').value.trim();
+    const hit = await Geo.first([detail && (detail + ', ' + c + ', ' + prov + ', Philippines'), c + ', ' + prov + ', Philippines']);
+    if (hit && !manual) { pin(hit.lat, hit.lng, detail ? 16 : 13); msg.textContent = 'Pinned from your address. Drag the pin to the exact spot.'; }
+  }
+  if (box) box.addEventListener('change', function () { clearTimeout(t2); t2 = setTimeout(fromAddress, 700); });
+})();
+</script>
+{% endblock %}

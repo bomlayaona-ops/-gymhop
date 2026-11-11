@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import csrf, password_field with context %}
+{% block title %}Reset password{% endblock %}
+{% block nav %}{% include "partials/auth_tabs.html" %}{% endblock %}
+{% block content %}
+<section class="form-page">
+    <span class="eyebrow">ACCOUNT HELP</span>
+    <h1>Enter your code</h1>
+    <p class="muted">If <strong>{{ email }}</strong> is registered, we sent a 6-digit code to it. It expires in 5 minutes.</p>
+    {% if dev_code %}
+    <div class="notice">Developer mode: email is not set up yet, so your code is <strong class="dev-code">{{ dev_code }}</strong>.</div>
+    {% endif %}
+    <form method="post" class="form-card form-stack">
+        {{ csrf() }}
+        <label>6-digit code
+            <input class="code-input" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autofocus autocomplete="one-time-code" placeholder="000000">
+        </label>
+        {{ password_field('password', 'New password', 'At least 8 characters', 'new-password', 'Letters and numbers, 8+ characters.') }}
+        {{ password_field('confirm', 'Confirm new password', 'Type it again', 'new-password') }}
+        <button class="btn btn-primary btn-full" type="submit">Change my password</button>
+    </form>
+    <form method="post" action="{{ url_for('auth.resend_reset') }}" class="resend-form">{{ csrf() }}
+        <button class="text-link linklike" type="submit">Send the code again</button> ·
+        <a class="text-link" href="{{ url_for('auth.forgot_password', portal=portal) }}">Use another email</a> ·
+        <a class="text-link" href="{{ url_for('admin_auth.admin_login' if portal == 'admin' else 'auth.login') }}">Back to login</a>
+    </form>
+</section>
+{% endblock %}

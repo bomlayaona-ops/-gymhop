@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Sales{% endblock %}
+{% block content %}
+<section class="dashboard-head"><div><span class="eyebrow">REPORTS</span><h1>Sales ledger</h1><p>Every confirmed payment is recorded here.</p></div>
+  <div class="stat-card"><span>Total sales shown</span><strong>{{ total|peso }}</strong></div></section>
+<section class="dashboard-section">
+{% if rows %}<div class="table-wrap"><table><thead><tr><th>Date</th><th>Payment ref</th><th>Type</th><th>Method</th><th>Amount</th></tr></thead><tbody>
+{% for r in rows %}<tr><td>{{ r.created_at.strftime('%b %d, %Y %I:%M %p') }}</td><td>{{ r.reference_no }}</td><td><span class="table-tag">{{ r.category }}</span></td><td>{{ r.method|replace('_',' ')|upper }}</td><td>{{ r.amount|peso }}</td></tr>{% endfor %}
+</tbody></table></div>{% else %}<div class="empty-inline"><p>No confirmed sales yet.</p></div>{% endif %}
+</section>
+{% endblock %}

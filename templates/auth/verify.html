@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import csrf with context %}
+{% block title %}Verify your email{% endblock %}
+{% block nav %}{% include "partials/auth_tabs.html" %}{% endblock %}
+{% block content %}
+<section class="form-page">
+    <span class="eyebrow">EMAIL SECURITY</span>
+    <h1>Check your email</h1>
+    <p class="muted">We sent a 6-digit code to <strong>{{ email }}</strong>. It expires in 5 minutes.</p>
+    {% if dev_code %}
+    <div class="notice">Developer mode: email is not set up yet, so your code is <strong class="dev-code">{{ dev_code }}</strong>.
+        Add your Gmail App Password to <code>.env</code> to send real emails.</div>
+    {% endif %}
+    <form method="post" class="form-card form-stack">
+        {{ csrf() }}
+        <label>Verification code
+            <input class="code-input" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autofocus autocomplete="one-time-code" placeholder="000000">
+        </label>
+        <button class="btn btn-primary btn-full" type="submit">Verify and log in</button>
+    </form>
+    <form method="post" action="{{ url_for('auth.resend_code') }}" class="resend-form">{{ csrf() }}
+        <button class="text-link linklike" type="submit">Resend code</button> ·
+        <a class="text-link" href="{{ url_for('admin_auth.admin_login' if portal == 'admin' else 'auth.login') }}">Back to login</a>
+    </form>
+</section>
+{% endblock %}

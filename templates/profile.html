@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import csrf, password_field with context %}
+{% block title %}My profile{% endblock %}
+{% block content %}
+<section class="dashboard-head">
+  <div><span class="eyebrow">ACCOUNT</span><h1>My profile</h1><p>Update your details, email, password and photo.</p></div>
+</section>
+<section class="dashboard-section"><div class="profile-grid">
+
+  <div class="form-card form-stack">
+    <h2>Profile photo</h2>
+    {% if current_user.photo %}<img class="avatar-lg" src="{{ url_for('static', filename=current_user.photo) }}" alt="Profile photo">
+    {% else %}<div class="avatar-lg avatar-fallback">{{ (current_user.first_name or current_user.email)[:1]|upper }}</div>{% endif %}
+    <form method="post" enctype="multipart/form-data" class="form-stack">{{ csrf() }}<input type="hidden" name="action" value="photo">
+      <label>Choose a photo <small>(PNG, JPG or WEBP, max 5 MB)</small><input type="file" name="photo" accept="image/png,image/jpeg,image/webp" required></label>
+      <button class="btn btn-primary" type="submit">Upload photo</button>
+    </form>
+    {% if current_user.photo %}<form method="post" data-confirm="Remove your photo?">{{ csrf() }}<input type="hidden" name="action" value="remove_photo"><button class="mini-btn danger">Remove photo</button></form>{% endif %}
+  </div>
+
+  <form method="post" class="form-card form-stack">{{ csrf() }}<input type="hidden" name="action" value="details">
+    <h2>Your details</h2>
+    <div class="two-col">
+      <label>First name<input name="first_name" required maxlength="60" value="{{ request.form.get('first_name', p.get('first_name','')) }}"></label>
+      <label>Last name<input name="last_name" required maxlength="60" value="{{ request.form.get('last_name', p.get('last_name','')) }}"></label>
+    </div>
+    {% if current_user.role == 'customer' %}
+    <label><span>Middle name <small>(optional)</small></span><input name="middle_name" maxlength="60" value="{{ request.form.get('middle_name', p.get('middle_name') or '') }}"></label>
+    <label>Date of birth<input name="dob" type="date" required value="{{ request.form.get('dob', p.get('date_of_birth') or '') }}"></label>
+    <label>Address<input name="address" required maxlength="255" value="{{ request.form.get('address', p.get('address','')) }}"></label>
+    {% endif %}
+    <label>Contact number<input name="contact" required maxlength="11" minlength="11" inputmode="numeric" pattern="09[0-9]{9}" placeholder="09171234567" title="11 digits starting with 09" oninput="this.value=this.value.replace(/\D/g,'')" value="{{ request.form.get('contact', p.get('contact_number','')) }}"></label>
+    <button class="btn btn-primary" type="submit">Save details</button>
+  </form>
+
+  <form method="post" class="form-card form-stack">{{ csrf() }}<input type="hidden" name="action" value="email">
+    <h2>Change email</h2>
+    <label>Email address<input name="email" type="email" required maxlength="150" value="{{ current_user.email }}"></label>
+    {{ password_field('current_password', 'Current password', 'Confirm with your password', 'current-password') }}
+    <button class="btn btn-primary" type="submit">Update email</button>
+  </form>
+
+  <form method="post" class="form-card form-stack">{{ csrf() }}<input type="hidden" name="action" value="password">
+    <h2>Change password</h2>
+    {{ password_field('current_password', 'Current password', 'Your current password', 'current-password') }}
+    {{ password_field('password', 'New password', 'At least 8 characters', 'new-password', 'Letters and numbers, 8+ characters.') }}
+    {{ password_field('confirm', 'Confirm new password', 'Type it again', 'new-password') }}
+    <button class="btn btn-primary" type="submit">Change password</button>
+  </form>
+
+</div></section>
+{% endblock %}

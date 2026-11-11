@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import gym_card with context %}
+{% block title %}Find gyms{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="section-heading"><div><span class="eyebrow">THE MARKETPLACE</span><h2>Find a gym</h2></div><p>Check who is open, compare plans, then join online.</p></div>
+  <form class="filter-bar" method="get">
+    <input name="q" value="{{ q }}" placeholder="Search gym name, city or province">
+    <select name="province"><option value="">All provinces</option>{% for p in provinces %}<option {{ 'selected' if p == province }}>{{ p }}</option>{% endfor %}</select>
+    <select name="city"><option value="">All cities</option>{% for c in cities %}<option {{ 'selected' if c == city }}>{{ c }}</option>{% endfor %}</select>
+    <label class="check"><input type="checkbox" name="open" value="1" {{ 'checked' if only_open }}> Open now only</label>
+    <button class="btn btn-primary">Search</button>
+  </form>
+  {% if gyms %}<div class="gym-grid">{% for gym in gyms %}{{ gym_card(gym) }}{% endfor %}</div>
+  {% else %}<div class="empty-state"><span>⌕</span><h3>No gyms found</h3><p>Try a different search.</p></div>{% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import product_card, gym_card with context %}
+{% block title %}Find Your Gym. Build Your Strength.{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-copy">
+    <span class="eyebrow"><span class="live-dot"></span> YOUR FITNESS, YOUR WAY</span>
+    <h1>Find Your Gym.<br><span>Build Your Strength.</span></h1>
+    <p>Discover gyms around you, compare memberships, book trainers, and shop fitness essentials — all in one place.</p>
+    <form class="searchbar" method="get" action="{{ url_for('main.gyms') }}">
+      <span>⌕</span><input name="q" placeholder="Search gyms, services, or location..." aria-label="Search gyms">
+      <button class="btn btn-primary" type="submit">Explore</button>
+    </form>
+    <div class="hero-proof"><span class="proof-avatars">● ● ●</span> <span>Built for every fitness journey</span></div>
+  </div>
+  <div class="hero-art">
+    <div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div>
+    <div class="art-card art-card-main"><div class="art-badge">GYMHOP PICK</div><div class="dumbbell">✦</div><h3>Your next PR<br>starts here.</h3><p>Train hard. Feel good.</p></div>
+    <div class="floating-tag tag-top">↗ Find your community</div><div class="floating-tag tag-bottom">⚡ All things fitness</div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-heading"><div><span class="eyebrow">BROWSE THE MARKETPLACE</span><h2>What are you looking for?</h2></div><p>From your first gym pass to your next personal best.</p></div>
+  <div class="category-grid">
+    <a class="category-card" href="{{ url_for('main.gyms') }}"><span class="category-icon">◉</span><h3>Memberships</h3><p>Find a plan that fits</p><span class="category-arrow">↗</span></a>
+    <a class="category-card" href="{{ url_for('main.gyms') }}"><span class="category-icon">↗</span><h3>Personal trainers</h3><p>Get expert coaching</p><span class="category-arrow">↗</span></a>
+    <a class="category-card" href="{{ url_for('main.shop', category='Merchandise') }}"><span class="category-icon">▣</span><h3>Gym merchandise</h3><p>Wear your motivation</p><span class="category-arrow">↗</span></a>
+    <a class="category-card" href="{{ url_for('main.shop', category='Supplements') }}"><span class="category-icon">✦</span><h3>Supplements</h3><p>Fuel your progress</p><span class="category-arrow">↗</span></a>
+  </div>
+</section>
+
+<section class="section listing-section">
+  <div class="section-heading"><div><span class="eyebrow">PARTNER GYMS</span><h2>Gyms near you</h2></div><a class="text-link" href="{{ url_for('main.gyms') }}">View all ↗</a></div>
+  {% if gyms %}<div class="gym-grid">{% for gym in gyms %}{{ gym_card(gym) }}{% endfor %}</div>
+  {% else %}<div class="empty-state"><span>⌕</span><h3>No gyms yet</h3><p>Be the first gym owner to open a storefront.</p><a class="btn btn-dark" href="{{ url_for('admin_auth.admin_register') }}">Become a gym partner</a></div>{% endif %}
+</section>
+
+{% if products %}
+<section class="section listing-section">
+  <div class="section-heading"><div><span class="eyebrow">THE GYMHOP EDIT</span><h2>Trending in the shop</h2></div><a class="text-link" href="{{ url_for('main.shop') }}">Shop all ↗</a></div>
+  <div class="product-grid">{% for p in products %}{{ product_card(p) }}{% endfor %}</div>
+</section>
+{% endif %}
+
+<section class="owner-banner"><div><span class="eyebrow">FOR GYM OWNERS</span><h2>Your gym deserves<br>to be discovered.</h2><p>Open your digital storefront, list your services, and manage customer requests from one dashboard.</p><a class="btn btn-light" href="{{ url_for('admin_auth.admin_register') }}">Grow with GymHop <span>↗</span></a></div><div class="owner-stat"><strong>01</strong><span>Create your gym page</span><strong>02</strong><span>List plans, trainers and products</span><strong>03</strong><span>Manage orders and payments in one place</span></div></section>
+{% endblock %}

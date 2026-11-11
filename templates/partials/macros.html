@@ -1,0 +1,133 @@
+{# Reusable pieces. Import with:  {% from "partials/macros.html" import csrf, password_field with context %} #}
+
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro password_field(name, label, placeholder="Your password", autocomplete="current-password", hint="") %}
+<label>{{ label }}
+    <span class="pw-wrap">
+        <input type="password" name="{{ name }}" required placeholder="{{ placeholder }}" autocomplete="{{ autocomplete }}">
+        <button type="button" class="pw-toggle" data-toggle-password aria-label="Show password" aria-pressed="false">
+            <svg class="eye-open" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-closed" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </button>
+    </span>
+    {% if hint %}<small>{{ hint }}</small>{% endif %}
+</label>
+{% endmacro %}
+
+{% macro status(value) %}<span class="status-pill {{ value|lower }}">{{ value|replace('_',' ')|capitalize }}</span>{% endmacro %}
+
+{% macro product_card(p) %}
+<article class="product-card">
+    <a class="product-photo-wrap" href="{{ url_for('main.gym_detail', slug=p.gym_slug) }}#shop">
+        <img class="product-photo" src="{{ url_for('static', filename=product_image(p)) }}" alt="{{ p.name }}" loading="lazy">
+        {% if p.stock < 1 %}<span class="sold-out">SOLD OUT</span>{% endif %}
+    </a>
+    <div class="product-info">
+        <div class="product-meta"><span>{{ p.category or 'Product' }}</span>
+            {% if p.stock > 0 %}<span class="available-dot">● {{ p.stock }} left</span>{% endif %}</div>
+        <h3>{{ p.name }}</h3>
+        <p class="gym-name">{{ p.gym_name }}</p>
+        <div class="product-bottom">
+            <strong>{{ p.price|peso }}</strong>
+            {% if current_user and current_user.role == 'customer' and p.stock > 0 %}
+            <form method="post" action="{{ url_for('customer.cart_add', product_id=p.id) }}">
+                {{ csrf() }}<input type="hidden" name="quantity" value="1">
+                <button class="mini-btn" type="submit">Add to cart</button>
+            </form>
+            {% elif not current_user %}
+            <a class="mini-btn" href="{{ url_for('auth.login') }}">Log in to buy</a>
+            {% endif %}
+        </div>
+    </div>
+</article>
+{% endmacro %}
+
+{% macro gym_card(gym) %}
+<article class="gym-card">
+    <a class="gym-cover" href="{{ url_for('main.gym_detail', slug=gym.slug) }}">
+        <img src="{{ url_for('static', filename=gym.cover_photo or 'images/defaults/gym.svg') }}" alt="{{ gym.name }}" loading="lazy">
+        <span class="open-badge {{ 'open' if gym.is_open else 'closed' }}">{{ 'OPEN' if gym.is_open else 'CLOSED' }}</span>
+    </a>
+    <div class="gym-card-body">
+        <h3><a href="{{ url_for('main.gym_detail', slug=gym.slug) }}">{{ gym.name }}</a></h3>
+        <p class="gym-name">⌖ {{ [gym.city, gym.province]|select|join(', ') or gym.address }}</p>
+        <div class="product-bottom">
+            <span class="muted-sm">{% if gym.from_price %}From <strong>{{ gym.from_price|peso }}</strong>{% else %}No plans yet{% endif %}</span>
+            <span class="muted-sm">{% if gym.avg_rating %}★ {{ gym.avg_rating }}{% else %}New{% endif %}</span>
+        </div>
+    </div>
+</article>
+{% endmacro %}
+
+{# Payment fields: GCash / Maya / Cash. Used on checkout, join and booking pages. #}
+{% macro payment_fields(methods, panels) %}
+<fieldset class="pay-box">
+    <legend>Payment</legend>
+    {% if methods|length == 1 %}<div class="notice">This gym has not added an online payment QR code (GCash, Maya, PayMongo or MariBank) yet. You can pay in cash at the gym.</div>{% endif %}
+    <div class="pay-methods">
+        {% for key, label in methods.items() %}
+        <label class="pay-option">
+            <input type="radio" name="method" value="{{ key }}" {% if loop.first %}checked{% endif %} data-pay-method>
+            <span class="pay-chip {{ key }}">{{ label }}</span>
+        </label>
+        {% endfor %}
+    </div>
+    {% for key, items in panels.items() %}
+    <div class="pay-instructions" data-pay-help="{{ key }}"{% if not loop.first %} hidden{% endif %}>
+        {% for it in items %}
+        <div class="qr-panel">
+            {% if items|length > 1 %}<h4>{{ it.gym_name }}</h4>{% endif %}
+            <div class="qr-row">
+                {% if it.qr_image %}<a href="{{ url_for('static', filename=it.qr_image) }}" target="_blank" rel="noopener noreferrer" title="Open bigger"><img class="qr-img" src="{{ url_for('static', filename=it.qr_image) }}" alt="{{ methods[key] }} QR code of {{ it.gym_name }}"></a>{% endif %}
+                <div class="qr-info">
+                    <strong>Pay with {{ methods[key] }}</strong>
+                    {% if it.amount %}<p>Amount to send: <b>{{ it.amount|peso }}</b></p>{% endif %}
+                    {% if it.account_name %}<p>Account name: <b>{{ it.account_name }}</b></p>{% endif %}
+                    {% if it.account_number %}<p>Number: <b>{{ it.account_number }}</b></p>{% endif %}
+                    {% if it.description %}<p class="qr-desc">{{ it.description }}</p>{% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        <p class="muted-sm">Scan the QR code with your {{ methods[key] }} app and send the exact amount. Then type the reference number from your receipt below.</p>
+    </div>
+    {% endfor %}
+    <div class="pay-instructions" data-pay-help="cash_onsite" hidden>
+        <strong>Pay at the gym</strong>
+        <p>Pay in cash when you visit. Your request stays pending until the gym confirms it.</p>
+    </div>
+    <label data-pay-ref>Reference number
+        <input name="reference" maxlength="80" placeholder="e.g. 1234 567 890123" autocomplete="off">
+    </label>
+    <label>Screenshot of payment <small>(optional)</small>
+        <input type="file" name="proof" accept="image/png,image/jpeg,image/webp">
+    </label>
+</fieldset>
+{% endmacro %}
+
+{# Short definition of the website, shown beside every login / register form #}
+{% macro about_gymhop() %}
+<p class="about-text"><strong>GymHop</strong> is a multi-gym membership marketplace and business accelerator.
+    Members find partner gyms, join a membership, book personal trainers and shop merchandise and supplements with one account.
+    Gym owners open their own storefront and run members, products, orders and payments from one dashboard.</p>
+<ul class="about-points">
+    <li><b>01</b><span>Compare gyms and see who is open</span></li>
+    <li><b>02</b><span>Join, book and pay with GCash or Maya</span></li>
+    <li><b>03</b><span>Gym owners manage everything in one place</span></li>
+</ul>
+{% endmacro %}
+
+{# Region -> Province -> City dropdowns + a free description. Server side: utils/ph_address.read_address #}
+{% macro address_picker(region='', province='', city='', detail='', label='Address description') %}
+<div class="addr-picker form-stack" data-src="{{ url_for('static', filename='data/ph_address.json') }}" data-region="{{ region }}" data-province="{{ province }}" data-city="{{ city }}">
+    <label>Region<select name="region" class="addr-region" required><option value="">Choose region</option></select></label>
+    <div class="two-col">
+        <label>Province<select name="province" class="addr-province" required disabled><option value="">Choose province</option></select></label>
+        <label>City / Municipality<select name="city" class="addr-city" required disabled><option value="">Choose city / municipality</option></select></label>
+    </div>
+    <label class="addr-other" hidden>Type your city / municipality<input name="city_other" maxlength="80"></label>
+    <label><span>{{ label }} <small>(house/unit no., street, barangay, landmark)</small></span>
+        <textarea name="detail" rows="2" required minlength="5" maxlength="150" placeholder="e.g. Unit 3, 25 Rizal St., Brgy. San Roque, near the market">{{ detail }}</textarea></label>
+</div>
+{% endmacro %}

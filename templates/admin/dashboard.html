@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import status with context %}
+{% block title %}Gym dashboard{% endblock %}
+{% block content %}
+<section class="dashboard-head">
+  <div><span class="eyebrow">GYMHOP SELLER STUDIO</span><h1>{{ gym.name }} <span class="verified-mark">✓</span></h1>
+    <p>{{ [gym.city, gym.province]|select|join(', ') or gym.address }} · {{ 'Open for members' if gym.is_open else 'Currently closed' }}</p></div>
+  <a class="btn btn-dark" href="{{ url_for('main.gym_detail', slug=gym.slug) }}">View public page ↗</a>
+</section>
+<section class="stats-grid five">
+  <div class="stat-card"><span>Revenue</span><strong>{{ stats.revenue|peso }}</strong><small>Confirmed payments</small></div>
+  <div class="stat-card"><span>Active members</span><strong>{{ stats.members }}</strong><small>Valid memberships</small></div>
+  <div class="stat-card"><span>Orders</span><strong>{{ stats.orders }}</strong><small>All product orders</small></div>
+  <div class="stat-card"><span>To verify</span><strong>{{ stats.pending_payments }}</strong><small><a class="text-link" href="{{ url_for('admin.payments') }}">Pending payments</a></small></div>
+  <div class="stat-card"><span>Low stock</span><strong>{{ stats.low_stock }}</strong><small>5 or fewer left</small></div>
+</section>
+<section class="chart-grid">
+  <div class="dashboard-section chart-box"><h2>Sales · last 30 days</h2><canvas id="salesChart" height="130"></canvas></div>
+  <div class="dashboard-section chart-box"><h2>Income by type</h2><canvas id="splitChart" height="190"></canvas></div>
+</section>
+<section class="dashboard-section"><div class="section-heading"><div><h2>Recent payments</h2></div><a class="text-link" href="{{ url_for('admin.payments') }}">See all ↗</a></div>
+{% if recent %}<div class="table-wrap"><table><thead><tr><th>Reference</th><th>Customer</th><th>For</th><th>Amount</th><th>Status</th></tr></thead><tbody>
+{% for p in recent %}<tr><td>{{ p.reference_no }}</td><td>{{ p.first_name or '' }} {{ p.last_name or '' }}<small>{{ p.email }}</small></td><td>{{ p.target }}</td><td>{{ p.amount|peso }}</td><td>{{ status(p.status) }}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="empty-inline"><p>No payments yet.</p></div>{% endif %}</section>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+  const red = '#e50914';
+  const grid = {color: '#2a2a2a'}, ticks = {color: '#aaa'};
+  new Chart(document.getElementById('salesChart'), {type: 'line',
+    data: {labels: {{ chart_labels|tojson }}, datasets: [{label: 'Sales (₱)', data: {{ chart_values|tojson }}, borderColor: red, backgroundColor: 'rgba(229,9,20,.15)', fill: true, tension: .3}]},
+    options: {plugins: {legend: {display: false}}, scales: {x: {grid, ticks: {...ticks, maxTicksLimit: 8}}, y: {grid, ticks, beginAtZero: true}}}});
+  new Chart(document.getElementById('splitChart'), {type: 'doughnut',
+    data: {labels: {{ split_labels|tojson }}, datasets: [{data: {{ split_values|tojson }}, backgroundColor: [red, '#8c8c8c', '#f5f5f5'], borderColor: '#171717'}]},
+    options: {plugins: {legend: {labels: {color: '#ddd'}}}}});
+</script>
+{% endblock %}

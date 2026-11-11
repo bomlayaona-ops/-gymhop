@@ -1,0 +1,12 @@
+{# Login | Register tabs shown at the top of every sign-in page. No dashboard links here: you must log in first. #}
+{% set ep = request.endpoint %}
+{% set is_admin = ep in ('admin_auth.admin_login', 'admin_auth.admin_register') or (ep == 'auth.verify' and session.get('pending_portal') == 'admin') or (ep in ('auth.forgot_password', 'auth.reset_password') and portal == 'admin') %}
+{% if is_admin %}
+    <a href="{{ url_for('admin_auth.admin_login') }}" class="tab {{ 'on' if ep in ('admin_auth.admin_login', 'auth.verify') }}">Gym owner login</a>
+    <a href="{{ url_for('admin_auth.admin_register') }}" class="tab {{ 'on' if ep == 'admin_auth.admin_register' }}">Gym owner register</a>
+    <a href="{{ url_for('auth.login') }}">Customer site</a>
+{% else %}
+    <a href="{{ url_for('auth.login') }}" class="tab {{ 'on' if ep in ('auth.login', 'auth.verify') }}">Login</a>
+    <a href="{{ url_for('auth.register') }}" class="tab {{ 'on' if ep == 'auth.register' }}">Register</a>
+    <a href="{{ url_for('admin_auth.admin_login') }}">For gym owners</a>
+{% endif %}

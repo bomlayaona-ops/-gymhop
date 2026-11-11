@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import csrf, password_field, address_picker with context %}
+{% block title %}Open your gym storefront{% endblock %}
+{% block nav %}{% include "partials/auth_tabs.html" %}{% endblock %}
+{% block content %}
+<section class="auth-layout">
+    <div class="auth-side">
+        <span class="eyebrow">GROW WITH GYMHOP</span>
+        <h1>Open your<br><span>gym storefront.</span></h1>
+        <div class="auth-decoration">GH<span>+</span></div>
+    </div>
+    <div class="auth-panel">
+        <span class="eyebrow">GYM ADMIN SIGN UP</span>
+        <h2>Create your gym account</h2>
+        <form method="post" class="form-stack">
+            {{ csrf() }}
+            <div class="two-col">
+                <label>Your first name<input name="first_name" required maxlength="60" value="{{ f.get('first_name','') }}"></label>
+                <label>Your last name<input name="last_name" required maxlength="60" value="{{ f.get('last_name','') }}"></label>
+            </div>
+            <label>Gym name<input name="gym_name" required maxlength="120" value="{{ f.get('gym_name','') }}"></label>
+            {{ address_picker(f.get('region',''), f.get('province',''), f.get('city_other') or f.get('city',''), f.get('detail',''), 'Gym address description') }}
+            <label>Contact number<input name="contact" required maxlength="11" minlength="11" inputmode="numeric" pattern="09[0-9]{9}" placeholder="09171234567" title="11 digits starting with 09" oninput="this.value=this.value.replace(/\D/g,'')" value="{{ f.get('contact','') }}"></label>
+            <label>Email address<input name="email" type="email" required autocomplete="email" value="{{ f.get('email','') }}"></label>
+            {{ password_field('password', 'Password', 'At least 8 characters', 'new-password', 'Letters and numbers, 8+ characters.') }}
+            {{ password_field('confirm', 'Confirm password', 'Type it again', 'new-password') }}
+            <button class="btn btn-primary btn-full" type="submit">Create gym account <span>↗</span></button>
+        </form>
+        <p class="auth-switch">Already a partner? <a href="{{ url_for('admin_auth.admin_login') }}">Gym owner login</a></p>
+    </div>
+</section>
+{% endblock %}

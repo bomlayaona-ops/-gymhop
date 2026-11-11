@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import csrf, status with context %}
+{% block title %}Membership plans{% endblock %}
+{% block content %}
+<section class="dashboard-head"><div><span class="eyebrow">YOUR STOREFRONT</span><h1>Membership plans</h1><p>Plans customers can buy and join online.</p></div></section>
+<section class="dashboard-section">
+  <form method="post" class="form-card form-stack">
+    {{ csrf() }}<h2>{{ 'Edit plan' if edit else 'Add a plan' }}</h2>
+    {% if edit %}<input type="hidden" name="plan_id" value="{{ edit.id }}">{% endif %}
+    <div class="two-col">
+      <label>Plan name<input name="name" required maxlength="100" placeholder="e.g. 1-Month Access" value="{{ edit.name if edit else '' }}"></label>
+      <label>Price (₱)<input name="price" type="number" min="0.01" step="0.01" required value="{{ edit.price if edit else '' }}"></label>
+    </div>
+    <label>Duration (days)<input name="duration_days" type="number" min="1" max="3650" required value="{{ edit.duration_days if edit else 30 }}"></label>
+    <label>What is included<textarea name="description" rows="3">{{ edit.description if edit and edit.description else '' }}</textarea></label>
+    <div class="row-actions"><button class="btn btn-primary">{{ 'Save changes' if edit else 'Add plan' }}</button>{% if edit %}<a class="btn btn-dark" href="{{ url_for('admin.plans') }}">Cancel</a>{% endif %}</div>
+  </form>
+</section>
+<section class="dashboard-section">
+{% if plans %}<div class="table-wrap"><table><thead><tr><th>Plan</th><th>Price</th><th>Duration</th><th>Status</th><th></th></tr></thead><tbody>
+{% for p in plans %}<tr><td><strong>{{ p.name }}</strong><small>{{ (p.description or '')|truncate(70) }}</small></td><td>{{ p.price|peso }}</td><td>{{ p.duration_days }} days</td>
+<td>{{ status('active' if p.is_active else 'cancelled') }}</td>
+<td class="row-actions"><a class="mini-btn" href="{{ url_for('admin.plans', edit=p.id) }}">Edit</a>
+<form method="post" action="{{ url_for('admin.plan_toggle', plan_id=p.id) }}">{{ csrf() }}<button class="mini-btn">{{ 'Hide' if p.is_active else 'Show' }}</button></form>
+    <form method="post" action="{{ url_for('admin.plan_delete', plan_id=p.id) }}" data-confirm="Delete this for good?">{{ csrf() }}<button class="mini-btn danger">Delete</button></form></td></tr>{% endfor %}
+</tbody></table></div>{% else %}<div class="empty-inline"><p>No plans yet.</p></div>{% endif %}
+</section>
+{% endblock %}

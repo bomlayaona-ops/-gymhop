@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import csrf, payment_fields with context %}
+{% block title %}Book {{ trainer.full_name }}{% endblock %}
+{% block content %}
+<section class="form-page">
+  <span class="eyebrow">PERSONAL TRAINING</span><h1>Book {{ trainer.full_name }}</h1>
+  <p class="muted">{{ gym.name }} · {{ trainer.specialization or 'Personal trainer' }}{% if trainer.availability %} · Available {{ trainer.availability }}{% endif %}</p>
+  <div class="summary-box"><div class="summary-line"><span>1 session</span><strong>{{ trainer.rate_per_session|peso }}</strong></div></div>
+  <form method="post" enctype="multipart/form-data" class="form-card form-stack">
+    {{ csrf() }}
+    <div class="two-col">
+      <label>Date<input type="date" name="session_date" min="{{ today }}" required></label>
+      <label>Time<input type="time" name="session_time" required></label>
+    </div>
+    <label>Notes <small>(optional)</small><input name="notes" maxlength="255" placeholder="Goals, injuries, etc."></label>
+    {{ payment_fields(methods, panels) }}
+    <button class="btn btn-primary btn-full" type="submit">Request booking</button>
+    <a class="text-link center" href="{{ url_for('main.gym_detail', slug=gym.slug) }}">Cancel</a>
+  </form>
+</section>
+{% endblock %}

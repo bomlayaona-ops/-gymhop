@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import csrf, payment_fields with context %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<section class="form-page">
+  <span class="eyebrow">MEMBERSHIP</span><h1>{{ title }}</h1>
+  <div class="summary-box"><div class="summary-line"><span>{{ summary }}</span><strong>{{ amount|peso }}</strong></div></div>
+  <form method="post" enctype="multipart/form-data" class="form-card form-stack">
+    {{ csrf() }}
+    {{ payment_fields(methods, panels) }}
+    <button class="btn btn-primary btn-full" type="submit">Submit application · {{ amount|peso }}</button>
+    <a class="text-link center" href="{{ cancel_url }}">Cancel</a>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import about_gymhop with context %}
+{% block title %}GymHop - Find Your Gym. Build Your Strength.{% endblock %}
+{% block nav %}{% endblock %}
+{% block content %}
+<section class="hero landing-hero">
+  <div class="hero-copy">
+    <span class="eyebrow"><span class="live-dot"></span> WELCOME TO GYMHOP</span>
+    <h1>Find Your Gym.<br><span>Build Your Strength.</span></h1>
+    <p class="lead">Hello! GymHop is the multi-gym membership marketplace and business accelerator. One account to find partner gyms, join a membership, book trainers and shop gear.</p>
+    <div class="landing-cta"><a class="btn btn-primary" href="{{ url_for('auth.login') }}">Login / Register <span>↗</span></a></div>
+  </div>
+  <div class="hero-art">
+    <div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div>
+    <div class="art-card art-card-main"><div class="art-badge">GYMHOP</div><div class="dumbbell">✦</div><h3>Your next PR<br>starts here.</h3><p>Train hard. Feel good.</p></div>
+    <div class="floating-tag tag-top">↗ Find your community</div><div class="floating-tag tag-bottom">⚡ All things fitness</div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-heading"><div><span class="eyebrow">WHAT IS GYMHOP?</span><h2>One marketplace, many gyms</h2></div></div>
+  {{ about_gymhop() }}
+</section>
+
+<section class="section">
+  <div class="section-heading"><div><span class="eyebrow">WHO IS IT FOR?</span><h2>Made for members and gym owners</h2></div></div>
+  <div class="category-grid two">
+    <div class="category-card"><span class="category-icon">◉</span><h3>Members</h3><p>Compare gyms, see who is open, join a plan, book a personal trainer, and buy merchandise and supplements. Pay with GCash, Maya or cash on-site.</p></div>
+    <div class="category-card"><span class="category-icon">▣</span><h3>Gym owners</h3><p>Open your own storefront. Sell memberships, trainers and products, verify payments and see your members and sales in one dashboard.</p></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-heading"><div><span class="eyebrow">HOW IT WORKS</span><h2>Three simple steps</h2></div></div>
+  <ul class="about-points steps">
+    <li><b>01</b><span>Register with your email and log in with a 6-digit code we send you</span></li>
+    <li><b>02</b><span>Find a gym, join a membership, book a trainer or shop</span></li>
+    <li><b>03</b><span>Pay by GCash or Maya and the gym confirms your payment</span></li>
+  </ul>
+</section>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<section class="form-page wide">
+  <span class="eyebrow">UPDATES</span><h1>Notifications</h1>
+  {% for n in items %}
+  <div class="notice-row {{ '' if n.is_read else 'unread' }}">
+    <strong>{{ n.title }}</strong><p>{{ n.message }}</p>
+    <small>{{ n.created_at.strftime('%b %d, %Y %I:%M %p') }}</small>
+    {% if n.link and n.link.startswith('/') %}<a class="text-link" href="{{ n.link }}">Open ↗</a>{% endif %}
+  </div>
+  {% else %}<div class="empty-inline"><p>You are all caught up.</p></div>{% endfor %}
+</section>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import product_card with context %}
+{% block title %}Shop{% endblock %}
+{% block content %}
+<section class="section listing-section">
+  <div class="section-heading"><div><span class="eyebrow">GYM SHOP</span><h2>Merchandise &amp; supplements</h2></div></div>
+  <form class="filter-bar" method="get">
+    <input name="q" value="{{ q }}" placeholder="Search products or gyms">
+    <select name="category"><option value="">All categories</option>{% for c in categories %}<option {{ 'selected' if c == category }}>{{ c }}</option>{% endfor %}</select>
+    <button class="btn btn-primary">Search</button>
+  </form>
+  {% if products %}<div class="product-grid">{% for p in products %}{{ product_card(p) }}{% endfor %}</div>
+  {% else %}<div class="empty-state"><span>⌕</span><h3>No products found</h3><p>Try another search.</p></div>{% endif %}
+</section>
+{% endblock %}

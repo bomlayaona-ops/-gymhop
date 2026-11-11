@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import csrf, status with context %}
+{% block title %}Members{% endblock %}
+{% block content %}
+<section class="dashboard-head"><div><span class="eyebrow">RECORDS</span><h1>Members</h1><p>Confirm the payment on the Payments page to activate a membership.</p></div>
+  <a class="btn btn-primary" href="{{ url_for('admin.payments') }}">Verify payments ↗</a></section>
+<section class="dashboard-section">
+{% if rows %}<div class="table-wrap"><table><thead><tr><th>Member</th><th>Plan</th><th>Payment</th><th>Status</th><th>Valid</th></tr></thead><tbody>
+{% for m in rows %}<tr><td>{{ m.first_name or '' }} {{ m.last_name or '' }}<small>{{ m.email }} · {{ m.contact_number or '' }}</small></td>
+<td>{{ m.plan_name }}<small>{{ m.price|peso }}</small></td><td>{{ status(m.payment_status or 'pending') }}</td><td>{{ status(m.status) }}</td>
+<td>{% if m.start_date %}{{ m.start_date.strftime('%b %d, %Y') }} – {{ m.end_date.strftime('%b %d, %Y') }}{% else %}—{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>{% else %}<div class="empty-inline"><p>No membership applications yet.</p></div>{% endif %}
+</section>
+{% endblock %}

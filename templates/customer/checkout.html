@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import csrf, payment_fields with context %}
+{% block title %}Checkout{% endblock %}
+{% block content %}
+<section class="form-page wide">
+  <span class="eyebrow">CHECKOUT</span><h1>Confirm and pay</h1>
+  <div class="summary-box">
+    {% for gid, rows in by_gym.items() %}
+    <div class="summary-gym"><strong>{{ rows[0].gym_name }}</strong>
+      {% for r in rows %}<div class="summary-line"><span>{{ r.quantity }} × {{ r.name }}</span><span>{{ r.line_total|peso }}</span></div>{% endfor %}
+      <div class="summary-line sub"><span>Subtotal (separate order)</span><span>{{ totals[gid]|peso }}</span></div></div>
+    {% endfor %}
+    <div class="summary-line grand"><span>Total to pay</span><strong>{{ grand|peso }}</strong></div>
+  </div>
+  <form method="post" enctype="multipart/form-data" class="form-card form-stack">
+    {{ csrf() }}
+    <label>Delivery / pick-up address<input name="address" required maxlength="255" value="{{ address }}"></label>
+    {{ payment_fields(methods, panels) }}
+    {% if by_gym|length > 1 %}<small>Each gym confirms its own part. Use one reference number for your payment; the gyms verify it separately.</small>{% endif %}
+    <button class="btn btn-primary btn-full" type="submit">Place order · {{ grand|peso }}</button>
+  </form>
+</section>
+{% endblock %}

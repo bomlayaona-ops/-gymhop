@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import gym_card with context %}
+{% block title %}Favorites{% endblock %}
+{% block content %}
+<section class="section"><div class="section-heading"><div><span class="eyebrow">SAVED</span><h2>Favorite gyms</h2></div></div>
+{% if gyms %}<div class="gym-grid">{% for gym in gyms %}{{ gym_card(gym) }}{% endfor %}</div>
+{% else %}<div class="empty-state"><span>♡</span><h3>No favorites yet</h3><a class="btn btn-primary" href="{{ url_for('main.gyms') }}">Find gyms</a></div>{% endif %}</section>
+{% endblock %}

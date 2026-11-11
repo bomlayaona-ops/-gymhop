@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import csrf, status with context %}
+{% block title %}Products{% endblock %}
+{% block content %}
+<section class="dashboard-head"><div><span class="eyebrow">YOUR STOREFRONT</span><h1>Products</h1><p>Merchandise and supplements. A photo is optional — we show a default picture for the category if you skip it.</p></div></section>
+
+<section class="dashboard-section">
+  <div class="form-card form-stack product-form">
+    <h2>{{ 'Edit product' if edit else 'Add a product' }}</h2>
+    <form method="post" enctype="multipart/form-data" class="form-stack">
+      {{ csrf() }}
+      {% if edit %}<input type="hidden" name="product_id" value="{{ edit.id }}">{% endif %}
+      <div class="two-col">
+        <label>Product name<input name="name" required maxlength="150" value="{{ edit.name if edit else '' }}" placeholder="e.g. Creatine Monohydrate 300g"></label>
+        <label>Category<select name="category" id="category-select">{% for c in categories %}<option {{ 'selected' if edit and edit.category == c }}>{{ c }}</option>{% endfor %}</select></label>
+      </div>
+      <div class="two-col">
+        <label>Price (₱)<input name="price" type="number" min="0.01" step="0.01" required value="{{ edit.price if edit else '' }}"></label>
+        <label>Stock<input name="stock" type="number" min="0" step="1" required value="{{ edit.stock if edit else 10 }}"></label>
+      </div>
+      <label>Description<textarea name="description" rows="3">{{ edit.description if edit and edit.description else '' }}</textarea></label>
+      <div class="image-picker">
+        <img id="image-preview" src="{{ url_for('static', filename=product_image(edit) if edit else 'images/defaults/supplement.svg') }}" alt="Product picture"
+             data-defaults='{{ {"Supplements": url_for("static", filename="images/defaults/supplement.svg"), "Merchandise": url_for("static", filename="images/defaults/merch.svg"), "Equipment": url_for("static", filename="images/defaults/equipment.svg"), "Apparel": url_for("static", filename="images/defaults/apparel.svg")}|tojson }}'
+             data-has-photo="{{ '1' if edit and edit.image else '0' }}">
+        <label>Product photo <small>(optional — leave empty to use the default picture{% if edit and edit.image %}, or choose a new one to replace the current photo{% endif %})</small>
+          <input type="file" name="image" id="image-input" accept="image/png,image/jpeg,image/webp"></label>
+      </div>
+      <div class="row-actions">
+        <button class="btn btn-primary" type="submit">{{ 'Save changes' if edit else 'Add product' }}</button>
+        {% if edit %}<a class="btn btn-dark" href="{{ url_for('admin.products') }}">Cancel</a>{% endif %}
+      </div>
+    </form>
+    {% if edit and edit.image %}
+    <form method="post" action="{{ url_for('admin.product_remove_image', product_id=edit.id) }}" data-confirm="Remove this photo and use the default picture?">{{ csrf() }}
+      <button class="mini-btn danger">Remove my photo (use default)</button></form>
+    {% endif %}
+  </div>
+</section>
+
+<section class="dashboard-section">
+{% if products %}<div class="table-wrap"><table><thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th></th></tr></thead><tbody>
+{% for p in products %}<tr>
+  <td class="cart-product"><img src="{{ url_for('static', filename=product_image(p)) }}" alt=""><div><strong>{{ p.name }}</strong><small>{{ (p.description or '')|truncate(60) }}</small></div></td>
+  <td><span class="table-tag">{{ p.category }}</span></td><td>{{ p.price|peso }}</td>
+  <td>{{ p.stock }}{% if p.stock <= 5 %} <small class="warn">low</small>{% endif %}</td>
+  <td>{{ status('active' if p.is_active else 'cancelled') }}</td>
+  <td class="row-actions"><a class="mini-btn" href="{{ url_for('admin.products', edit=p.id) }}">Edit</a>
+    <form method="post" action="{{ url_for('admin.product_toggle', product_id=p.id) }}">{{ csrf() }}<button class="mini-btn">{{ 'Hide' if p.is_active else 'Show' }}</button></form>
+    <form method="post" action="{{ url_for('admin.product_delete', product_id=p.id) }}" data-confirm="Delete this for good?">{{ csrf() }}<button class="mini-btn danger">Delete</button></form></td>
+</tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="empty-inline"><p>No products yet. Add your first one above.</p></div>{% endif %}
+</section>
+{% endblock %}

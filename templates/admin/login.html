@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import csrf, password_field with context %}
+{% block title %}Gym owner login{% endblock %}
+{% block nav %}{% include "partials/auth_tabs.html" %}{% endblock %}
+{% block content %}
+<section class="auth-layout">
+    <div class="auth-side">
+        <span class="eyebrow">WELCOME, GYM OWNER</span>
+        <h1>Run your gym<br><span>like a pro.</span></h1>
+        <div class="auth-decoration">GH<span>+</span></div>
+    </div>
+    <div class="auth-panel">
+        <span class="eyebrow">GYM OWNER LOGIN</span>
+        <h2>Log in to your dashboard</h2>
+        <p class="muted">We will email you a 6-digit code to confirm it is you.</p>
+        <form method="post" class="form-stack">
+            {{ csrf() }}
+            <label>Email address<input name="email" type="email" required autocomplete="email" value="{{ request.form.get('email','') }}"></label>
+            {{ password_field('password', 'Password') }}
+            <p class="forgot-link"><a class="text-link" href="{{ url_for('auth.forgot_password', portal="admin") }}">Forgot password?</a></p>
+            <button class="btn btn-primary btn-full" type="submit">Send my code <span>↗</span></button>
+        </form>
+        <p class="auth-switch">New gym? <a href="{{ url_for('admin_auth.admin_register') }}">Open your storefront</a></p>
+        <p class="auth-switch">Looking to train? <a href="{{ url_for('auth.login') }}">Customer login</a></p>
+    </div>
+</section>
+{% endblock %}

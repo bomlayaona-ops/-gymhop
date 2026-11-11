@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import csrf, status with context %}
+{% block title %}Bookings{% endblock %}
+{% block content %}
+<section class="dashboard-head"><div><span class="eyebrow">RECORDS</span><h1>Trainer bookings</h1><p>A booking is confirmed once its payment is verified.</p></div></section>
+<section class="dashboard-section">
+{% if rows %}<div class="table-wrap"><table><thead><tr><th>Customer</th><th>Trainer</th><th>When</th><th>Payment</th><th>Status</th><th></th></tr></thead><tbody>
+{% for b in rows %}<tr><td>{{ b.first_name or '' }} {{ b.last_name or '' }}<small>{{ b.email }}</small></td><td>{{ b.trainer_name }}<small>{{ b.rate_per_session|peso }}</small></td>
+<td>{{ b.session_date.strftime('%b %d, %Y') }} · {{ b.session_time|hhmm }}{% if b.notes %}<small>{{ b.notes }}</small>{% endif %}</td>
+<td>{{ status(b.payment_status or 'pending') }}</td><td>{{ status(b.status) }}</td>
+<td class="row-actions">{% if b.status == 'pending' %}<a class="mini-btn" href="{{ url_for('admin.payments') }}">Verify payment</a>{% endif %}
+{% if b.status in ('pending','confirmed') %}
+{% if b.status == 'confirmed' %}<form method="post" action="{{ url_for('admin.booking_status', booking_id=b.id) }}">{{ csrf() }}<input type="hidden" name="status" value="completed"><button class="mini-btn">Mark done</button></form>{% endif %}
+<form method="post" action="{{ url_for('admin.booking_status', booking_id=b.id) }}" data-confirm="Cancel this booking?">{{ csrf() }}<input type="hidden" name="status" value="cancelled"><button class="mini-btn danger">Cancel</button></form>{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>{% else %}<div class="empty-inline"><p>No bookings yet.</p></div>{% endif %}
+</section>
+{% endblock %}

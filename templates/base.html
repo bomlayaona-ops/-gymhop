@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}GymHop{% endblock %} | GymHop</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/extra.css') }}">
+    {% block head %}{% endblock %}
+    <script defer src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script defer src="{{ url_for('static', filename='js/address.js') }}"></script>
+</head>
+<body>
+<header class="topbar">
+    <a class="brand" href="{{ url_for('main.home') }}"><span class="brand-mark">G</span><span>Gym<span>Hop</span></span></a>
+    <button class="menu-toggle" aria-label="Toggle menu" aria-expanded="false">☰</button>
+    <nav class="nav-links">
+    {% block nav %}
+        {% if current_user and current_user.role == 'admin' %}
+            <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('main.gyms') }}">View marketplace</a>
+        {% else %}
+            <a href="{{ url_for('main.gyms') }}">Find gyms</a>
+            <a href="{{ url_for('main.shop') }}">Shop</a>
+        {% endif %}
+        {% if current_user and current_user.role == 'customer' %}
+            <a href="{{ url_for('customer.dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('customer.my_activity') }}">My activity</a>
+            <a class="cart-link" href="{{ url_for('customer.cart') }}">Cart{% if cart_count %}<em>{{ cart_count }}</em>{% endif %}</a>
+        {% endif %}
+        {% if current_user %}
+            <a class="bell" href="{{ url_for('customer.notifications') }}" aria-label="Notifications">🔔{% if unread_count %}<em>{{ unread_count }}</em>{% endif %}</a>
+            <a class="nav-user" href="{{ url_for('profile.my_profile') }}">{% if current_user.photo %}<img class="nav-avatar" src="{{ url_for('static', filename=current_user.photo) }}" alt="">{% endif %}Hi, {{ current_user.first_name or current_user.full_name }}</a>
+            <a class="nav-cta" href="{{ url_for('auth.logout') }}">Log out</a>
+        {% else %}
+            <a href="{{ url_for('admin_auth.admin_login') }}">For gym owners</a>
+            <a href="{{ url_for('auth.login') }}">Log in</a>
+            <a class="nav-cta" href="{{ url_for('auth.register') }}">Get started</a>
+        {% endif %}
+    {% endblock %}
+    </nav>
+</header>
+
+{% if current_user and current_user.role == 'admin' and request.endpoint and request.endpoint.startswith('admin.') %}
+<nav class="subnav">
+    {% for ep, label in [('admin.dashboard','Overview'),('admin.gym_profile','My gym'),('admin.products','Products'),('admin.plans','Memberships'),('admin.trainers','Trainers'),('admin.memberships','Members'),('admin.orders','Orders'),('admin.bookings','Bookings'),('admin.payments','Payments'),('admin.sales','Sales')] %}
+    <a href="{{ url_for(ep) }}" class="{{ 'on' if request.endpoint == ep }}">{{ label }}</a>
+    {% endfor %}
+</nav>
+{% endif %}
+
+<main>
+    <div class="flash-wrap">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}<button class="flash-close" aria-label="Dismiss message">×</button></div>
+            {% endfor %}
+        {% endwith %}
+    </div>
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+    <a class="brand" href="{{ url_for('main.home') }}">Gym<span>Hop</span></a>
+    <p>Find Your Gym. Build Your Strength.</p>
+    <small>© 2026 GymHop · Multi-gym membership marketplace</small>
+</footer>
+{% block scripts %}{% endblock %}
+</body>
+</html>

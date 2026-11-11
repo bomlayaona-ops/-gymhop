@@ -1,0 +1,13 @@
+{# Big Login | Register buttons inside the form panel (always visible, also on phones). #}
+{% set ep = request.endpoint %}
+{% if ep in ('admin_auth.admin_login', 'admin_auth.admin_register') %}
+<div class="panel-tabs">
+    <a href="{{ url_for('admin_auth.admin_login') }}" class="{{ 'on' if ep == 'admin_auth.admin_login' }}">Gym owner login</a>
+    <a href="{{ url_for('admin_auth.admin_register') }}" class="{{ 'on' if ep == 'admin_auth.admin_register' }}">Register your gym</a>
+</div>
+{% else %}
+<div class="panel-tabs">
+    <a href="{{ url_for('auth.login') }}" class="{{ 'on' if ep == 'auth.login' }}">Login</a>
+    <a href="{{ url_for('auth.register') }}" class="{{ 'on' if ep == 'auth.register' }}">Register</a>
+</div>
+{% endif %}
